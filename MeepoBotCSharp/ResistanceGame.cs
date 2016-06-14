@@ -160,7 +160,7 @@ namespace MeepoBotCSharp
             public void resetMissionVote() { missionVote = MISSIONVOTE.NOTSUBMITTED; }
         }
 
-        private int neededPlayers = 3;
+        private int neededPlayers = 5;
         private List<Mission> missions = new List<Mission>();
         private List<ResistancePlayer> players = new List<ResistancePlayer>();
         private static int rejectsNeededToFail = 5;
@@ -668,197 +668,203 @@ namespace MeepoBotCSharp
             int inputLen = toParse.Length;
             Channel gameChannel = getClient().GetChannel(getTextChannelID());
             Server gameServer = getClient().GetServer(getGameServerID());
-            if (e.Channel.IsPrivate)
-            {
-                string toSend = "";
-                ResistancePlayer thisPlayer = findPlayer(e.User.Id);
-                if (thisPlayer == null)
-                    await getClient().GetChannel(getTextChannelID()).SendMessage("Exception: Resistance Player is null.");
-                else if (GameState() == GAMESTATE.VOTEONTEAM)
-                {
-                    if (command == Resistance.PRIVATECOMMAND_ACCEPTTEAM)
-                    {
-                        if (thisPlayer.getTeamVote() != TEAMVOTE.NOTSUBMITTED)
-                            toSend += "You have already submitted a vote!";
-                        else
-                        {
-                            thisPlayer.setTeamVote(TEAMVOTE.APPROVED);
-                            toSend += "You have approved this team draft.";
-                        }
-                        toSend += provideChannelLink();
-                        await e.Channel.SendMessage(toSend);
-                    }
-                    else if (command == Resistance.PRIVATECOMMAND_REJECTTEAM)
-                    {
-                        if (thisPlayer.getTeamVote() != TEAMVOTE.NOTSUBMITTED)
-                            toSend += "You have already submitted a vote!";
-                        else
-                        {
-                            thisPlayer.setTeamVote(TEAMVOTE.REJECTED);
-                            toSend += "You have rejected this team draft.";
-                        }
-                        toSend += provideChannelLink();
-                        await e.Channel.SendMessage(toSend);
-                    }
-                }
-                else if (GameState() == GAMESTATE.VOTEMISSION)
-                {
-                    if (command == Resistance.PRIVATECOMMAND_PASS)
-                    {
-                        if (thisPlayer.getMissionVote() != MISSIONVOTE.NOTSUBMITTED)
-                            toSend += "You have already submitted a vote!";
-                        else
-                        {
-                            thisPlayer.setMissionVote(MISSIONVOTE.PASSED);
-                            toSend += "You have succeeded your objective.";
-                        }
-                        toSend += provideChannelLink();
-                        await e.Channel.SendMessage(toSend);
-                    }
-                    else if (command == Resistance.PRIVATECOMMAND_FAIL)
-                    {
-                        if (thisPlayer.getMissionVote() != MISSIONVOTE.NOTSUBMITTED)
-                            toSend += "You have already submitted a vote!";
-                        else if (thisPlayer.getAllegiance() == ALLEGIANCE.RESISTANCE)
-                        {
-                            thisPlayer.setMissionVote(MISSIONVOTE.PASSED);
-                            toSend += "Resistance members can only choose to pass! Your vote has been submitted as !mpass.";
-                        }
-                        else
-                        {
-                            thisPlayer.setMissionVote(MISSIONVOTE.FAILED);
-                            toSend += "You have sabotaged this mission.";
-                        }
-                        toSend += provideChannelLink();
-                        await e.Channel.SendMessage(toSend);
-                    }
-                }
-            }
-            else if (command == Resistance.COMMAND_HELP)
-            {
-                await e.Channel.SendMessage(provideHelpString());
-            }
-            else if (command == Constants.COMMAND_DEVKILLGAME && e.User.Id == getHostID())
+            if (command == Constants.COMMAND_DEVKILLGAME && e.User.Id == getHostID())
             {
                 setGameForDeletion();
                 await getClient().GetChannel(getParentChannel()).SendMessage("DEV KILLED RESISTANCE LOBBY");
             }
-            else if (command == Resistance.COMMAND_LISTPLAYERS)
+            else if (!getGameStarted())
+                return;
+            else
             {
-                string listPlayers = "```";
-                for (int i = 0; i < players.Count(); i++)
+                
+                if (e.Channel.IsPrivate)
                 {
-                    int list = i + 1;
-                    ResistancePlayer currentPlayer = players.ElementAt(i);
-                    listPlayers += list + ") " + currentPlayer.getPlayerName() + "\n";
-
-                }
-                listPlayers += "```";
-                await getClient().GetChannel(getTextChannelID()).SendMessage(listPlayers);
-            }
-            else if (command == Resistance.COMMAND_LISTCURRENTTEAM)
-            {
-                Mission thisMission = getCurrentMission();
-                if (GameState() == GAMESTATE.TEAMDRAFT || GameState() == GAMESTATE.VOTEONTEAM)
-                {
-                    await getClient().GetChannel(getTextChannelID()).SendMessage(getCurrentTeamString());
-                }
-            }
-            else if (command == Resistance.COMMAND_CONFIRMDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
-            {
-                string confirm = "";
-                if (e.User.Id != missionLeader)
-                {
-                    confirm += "You cannot draft a team because you are not the mission leader! The current mission leader is: " + players.ElementAt(missionLeaderIndex).getPlayerNickname();
-                }
-                else if (playersOnMission.Count() == getCurrentMission().getRequiredPlayers())
-                {
-                    confirm += "After deliberation, " + players.ElementAt(missionLeaderIndex).getPlayerNickname() + " has decided to finalize on the team draft. Go to your PMs (top left corner of Discord client) OR click on " + getClient().CurrentUser.Mention + " and privately message me !maccept if you agree with this team draft, or !mreject if you disagree.";
-                    foreach (ResistancePlayer player in players)
+                    string toSend = "";
+                    ResistancePlayer thisPlayer = findPlayer(e.User.Id);
+                    if (thisPlayer == null)
+                        await getClient().GetChannel(getTextChannelID()).SendMessage("Exception: Resistance Player is null.");
+                    else if (GameState() == GAMESTATE.VOTEONTEAM)
                     {
-                        await gameServer.GetUser(player.getPlayerID()).SendMessage(getCurrentTeamString() + "!maccept if you agree with this draft. \n!mreject if you disagree with this draft.");
-                    }
-                    setGameState(GAMESTATE.VOTEONTEAM);
-                }
-                else
-                {
-                    confirm += "You must draft a full team before you can confirm it!";
-                }
-                await gameChannel.SendMessage(confirm);
-            }
-            else if (command == Resistance.COMMAND_CLEARDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
-            {
-                string confirm = "";
-                if (e.User.Id != missionLeader)
-                {
-                    confirm += "You cannot draft a team because you are not the mission leader! The current mission leader is: " + players.ElementAt(missionLeaderIndex).getPlayerNickname();
-                }
-                else
-                {
-                    confirm += "Team draft is cleared: please start a new draft.";
-                    playersOnMission.Clear();
-                }
-                await gameChannel.SendMessage(confirm);
-            }
-            else if (command == Resistance.COMMAND_LISTSITUATION)
-            {
-                await getClient().GetChannel(getTextChannelID()).SendMessage(getCurrentSituationString());
-            }
-            else if (command == Resistance.COMMAND_DRAFT && GameState() == GAMESTATE.TEAMDRAFT)
-            {
-                string toSend = "";
-                if (e.User.Id != missionLeader)
-                {
-                    toSend += "You cannot draft a team because you are not the mission leader! The current mission leader is: " + players.ElementAt(missionLeaderIndex).getPlayerNickname();
-                    await gameChannel.SendMessage(toSend);
-                    return;
-                }
-                else if (inputLen < 2)
-                {
-                    toSend += "USAGE: !mdraft # # ..., where # corresponds to the # the player is ordered in !mlistplayers.";
-                    await gameChannel.SendMessage(toSend);
-                    return;
-                }
-                else
-                {
-                    for (int i = 1; i < toParse.Length; i++)
-                    {
-                        int index;
-                        if (playersOnMission.Count() == getCurrentMission().getRequiredPlayers())
+                        if (command == Resistance.PRIVATECOMMAND_ACCEPTTEAM)
                         {
-                            toSend += "The team is drafted. Use !mconfirm to confirm this draft or !mclear to clear this draft.";
-                            await gameChannel.SendMessage(toSend + getCurrentTeamString());
-                            return;
-                        }
-                        else if (Int32.TryParse(toParse[i], out index))
-                        {
-                            if (index <= players.Count() && index > 0)
+                            if (thisPlayer.getTeamVote() != TEAMVOTE.NOTSUBMITTED)
+                                toSend += "You have already submitted a vote!";
+                            else
                             {
-                                bool dontAdd = false;
-                                ResistancePlayer toAddPlayer = players.ElementAt(index - 1);
-                                if (!playersOnMission.Any())
+                                thisPlayer.setTeamVote(TEAMVOTE.APPROVED);
+                                toSend += "You have approved this team draft.";
+                            }
+                            toSend += provideChannelLink();
+                            await e.Channel.SendMessage(toSend);
+                        }
+                        else if (command == Resistance.PRIVATECOMMAND_REJECTTEAM)
+                        {
+                            if (thisPlayer.getTeamVote() != TEAMVOTE.NOTSUBMITTED)
+                                toSend += "You have already submitted a vote!";
+                            else
+                            {
+                                thisPlayer.setTeamVote(TEAMVOTE.REJECTED);
+                                toSend += "You have rejected this team draft.";
+                            }
+                            toSend += provideChannelLink();
+                            await e.Channel.SendMessage(toSend);
+                        }
+                    }
+                    else if (GameState() == GAMESTATE.VOTEMISSION)
+                    {
+                        if (command == Resistance.PRIVATECOMMAND_PASS)
+                        {
+                            if (thisPlayer.getMissionVote() != MISSIONVOTE.NOTSUBMITTED)
+                                toSend += "You have already submitted a vote!";
+                            else
+                            {
+                                thisPlayer.setMissionVote(MISSIONVOTE.PASSED);
+                                toSend += "You have succeeded your objective.";
+                            }
+                            toSend += provideChannelLink();
+                            await e.Channel.SendMessage(toSend);
+                        }
+                        else if (command == Resistance.PRIVATECOMMAND_FAIL)
+                        {
+                            if (thisPlayer.getMissionVote() != MISSIONVOTE.NOTSUBMITTED)
+                                toSend += "You have already submitted a vote!";
+                            else if (thisPlayer.getAllegiance() == ALLEGIANCE.RESISTANCE)
+                            {
+                                thisPlayer.setMissionVote(MISSIONVOTE.PASSED);
+                                toSend += "Resistance members can only choose to pass! Your vote has been submitted as !mpass.";
+                            }
+                            else
+                            {
+                                thisPlayer.setMissionVote(MISSIONVOTE.FAILED);
+                                toSend += "You have sabotaged this mission.";
+                            }
+                            toSend += provideChannelLink();
+                            await e.Channel.SendMessage(toSend);
+                        }
+                    }
+                }
+                else if (command == Resistance.COMMAND_HELP)
+                {
+                    await e.Channel.SendMessage(provideHelpString());
+                }
+                else if (command == Resistance.COMMAND_LISTPLAYERS)
+                {
+                    string listPlayers = "```";
+                    for (int i = 0; i < players.Count(); i++)
+                    {
+                        int list = i + 1;
+                        ResistancePlayer currentPlayer = players.ElementAt(i);
+                        listPlayers += list + ") " + currentPlayer.getPlayerName() + "\n";
+
+                    }
+                    listPlayers += "```";
+                    await getClient().GetChannel(getTextChannelID()).SendMessage(listPlayers);
+                }
+                else if (command == Resistance.COMMAND_LISTCURRENTTEAM)
+                {
+                    Mission thisMission = getCurrentMission();
+                    if (GameState() == GAMESTATE.TEAMDRAFT || GameState() == GAMESTATE.VOTEONTEAM)
+                    {
+                        await getClient().GetChannel(getTextChannelID()).SendMessage(getCurrentTeamString());
+                    }
+                }
+                else if (command == Resistance.COMMAND_CONFIRMDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
+                {
+                    string confirm = "";
+                    if (e.User.Id != missionLeader)
+                    {
+                        confirm += "You cannot draft a team because you are not the mission leader! The current mission leader is: " + players.ElementAt(missionLeaderIndex).getPlayerNickname();
+                    }
+                    else if (playersOnMission.Count() == getCurrentMission().getRequiredPlayers())
+                    {
+                        confirm += "After deliberation, " + players.ElementAt(missionLeaderIndex).getPlayerNickname() + " has decided to finalize on the team draft. Go to your PMs (top left corner of Discord client) OR click on " + getClient().CurrentUser.Mention + " and privately message me !maccept if you agree with this team draft, or !mreject if you disagree.";
+                        foreach (ResistancePlayer player in players)
+                        {
+                            await gameServer.GetUser(player.getPlayerID()).SendMessage(getCurrentTeamString() + "!maccept if you agree with this draft. \n!mreject if you disagree with this draft.");
+                        }
+                        setGameState(GAMESTATE.VOTEONTEAM);
+                    }
+                    else
+                    {
+                        confirm += "You must draft a full team before you can confirm it!";
+                    }
+                    await gameChannel.SendMessage(confirm);
+                }
+                else if (command == Resistance.COMMAND_CLEARDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
+                {
+                    string confirm = "";
+                    if (e.User.Id != missionLeader)
+                    {
+                        confirm += "You cannot draft a team because you are not the mission leader! The current mission leader is: " + players.ElementAt(missionLeaderIndex).getPlayerNickname();
+                    }
+                    else
+                    {
+                        confirm += "Team draft is cleared: please start a new draft.";
+                        playersOnMission.Clear();
+                    }
+                    await gameChannel.SendMessage(confirm);
+                }
+                else if (command == Resistance.COMMAND_LISTSITUATION)
+                {
+                    await getClient().GetChannel(getTextChannelID()).SendMessage(getCurrentSituationString());
+                }
+                else if (command == Resistance.COMMAND_DRAFT && GameState() == GAMESTATE.TEAMDRAFT)
+                {
+                    string toSend = "";
+                    if (e.User.Id != missionLeader)
+                    {
+                        toSend += "You cannot draft a team because you are not the mission leader! The current mission leader is: " + players.ElementAt(missionLeaderIndex).getPlayerNickname();
+                        await gameChannel.SendMessage(toSend);
+                        return;
+                    }
+                    else if (inputLen < 2)
+                    {
+                        toSend += "USAGE: !mdraft # # ..., where # corresponds to the # the player is ordered in !mlistplayers.";
+                        await gameChannel.SendMessage(toSend);
+                        return;
+                    }
+                    else
+                    {
+                        for (int i = 1; i < toParse.Length; i++)
+                        {
+                            int index;
+                            if (playersOnMission.Count() == getCurrentMission().getRequiredPlayers())
+                            {
+                                toSend += "The team is drafted. Use !mconfirm to confirm this draft or !mclear to clear this draft.";
+                                await gameChannel.SendMessage(toSend + getCurrentTeamString());
+                                return;
+                            }
+                            else if (Int32.TryParse(toParse[i], out index))
+                            {
+                                if (index <= players.Count() && index > 0)
                                 {
-                                    playersOnMission.Add(toAddPlayer);
-                                }
-                                else
-                                {
-                                    foreach (ResistancePlayer player in playersOnMission)
+                                    bool dontAdd = false;
+                                    ResistancePlayer toAddPlayer = players.ElementAt(index - 1);
+                                    if (!playersOnMission.Any())
                                     {
-                                        if (toAddPlayer.getPlayerID() == player.getPlayerID())
-                                        {
-                                            dontAdd = true;
-                                            break;
-                                        }
-                                    }
-                                    if(!dontAdd)
                                         playersOnMission.Add(toAddPlayer);
+                                    }
+                                    else
+                                    {
+                                        foreach (ResistancePlayer player in playersOnMission)
+                                        {
+                                            if (toAddPlayer.getPlayerID() == player.getPlayerID())
+                                            {
+                                                dontAdd = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!dontAdd)
+                                            playersOnMission.Add(toAddPlayer);
+                                    }
                                 }
                             }
                         }
+                        toSend += getCurrentTeamString();
                     }
-                    toSend += getCurrentTeamString();
+                    await gameChannel.SendMessage(toSend);
                 }
-                await gameChannel.SendMessage(toSend);
             }
         }
     }

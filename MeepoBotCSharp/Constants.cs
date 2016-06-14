@@ -10,7 +10,7 @@ namespace MeepoBotCSharp
 {
     class Constants
     {
-        public static string URL_GITHUB = "https://github.com/trineroks";
+        public static string URL_GITHUB = "https://github.com/trineroks/MeepoBot";
         public static string CREATOR = "trineroks";
 
         public static bool TESTBUILD = false;
@@ -58,7 +58,7 @@ namespace MeepoBotCSharp
         public static string MESSAGE_GAMEDELETED = " lobby has been deleted!";
         public static string MESSAGE_CANCELNOTHOST = "You cannot cancel this game; you are not the host!";
         public static string MESSAGE_CANCELGAMESTARTED = "You cannot cancel this game; the game has started!";
-        public static string MESSAGE_GAMECREATED = " lobby has been created! To join type !mjoin. The game will be hosted on the text channel: #";
+        public static string MESSAGE_GAMECREATED = " lobby has been created! To join type !mjoin. The game will be hosted on the text channel: ";
         public static string MESSAGE_GAMEHASSTARTED = "A party game is already running on this server: ";
         public static string MESSAGE_GAMEALREADYJOINED = "You have already joined the party game!";
         public static string MESSAGE_GAMEROLESDISTRIBUTED = "The game roles have been distributed by PM. Check for a PM from me on the top left of your Discord client.";
