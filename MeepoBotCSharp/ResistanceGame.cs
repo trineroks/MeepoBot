@@ -160,16 +160,18 @@ namespace MeepoBotCSharp
             public void resetMissionVote() { missionVote = MISSIONVOTE.NOTSUBMITTED; }
         }
 
-        private int neededPlayers = 5;
+        private int minimumPlayers = 5;
+        private int maximumPlayers = 10;
         private List<Mission> missions = new List<Mission>();
         private List<ResistancePlayer> players = new List<ResistancePlayer>();
-        private static int rejectsNeededToFail = 5;
+        private static int rejectsNeededToFail = 5; //number of team rejects needed at any team draft phase to lose
 
         private int currentMission = 1;
         private List<ResistancePlayer> playersOnMission = new List<ResistancePlayer>();
         private ulong missionLeader;
         private int missionLeaderIndex = 0;
         private int teamRejectCount = 0;
+        private bool start = false;
 
         private Random rand = new Random();
         private GAMESTATE STATE = GAMESTATE.DEFAULT;
@@ -206,22 +208,47 @@ namespace MeepoBotCSharp
             base.GameLoop();
         }
 
-        public override void checkToStart()
+        public override async void checkToStart()
         {
-            List<ulong> playerList = new List<ulong>();
-            foreach(ulong ID in getAllPlayerIDs())
-                playerList.Add(ID);
-            if (playerList.Count() == neededPlayers)
+            int playerCount = getAllPlayerIDs().Count();
+            if (playerCount >= minimumPlayers)
             {
-                setGameStart();
-                string players = "";
-                for (int i = 0; i < playerList.Count(); i++)
-                {
-                    players += getClient().GetServer(getGameServerID()).GetUser(playerList.ElementAt(i)).NicknameMention + " ";
-                }
-                getClient().GetChannel(getTextChannelID()).SendMessage("The game has started with players " + players);
+                if (gameClock.ElapsedMilliseconds >= Constants.GAME_DELETIONDELAY)
+                    initializeGame();
+                else if (start)
+                    initializeGame();
             }
+            else if (playerCount == maximumPlayers)
+                initializeGame();
+            else if (start)
+            {
+                int atLeast = minimumPlayers - playerCount;
+                await getClient().GetChannel(getTextChannelID()).SendMessage("Not enough players to start! You need at least " + atLeast + " more players to start!");
+                start = false;
+            }
+        }
+
+        private async void initializeGame()
+        {
+            setGameStart();
+            string playersInGame = "";
+            foreach(ulong ID in getAllPlayerIDs())
+                playersInGame += getClient().GetServer(getGameServerID()).GetUser(ID).NicknameMention + " ";
+            await getClient().GetChannel(getTextChannelID()).SendMessage("The game has started with players " + playersInGame);
             setGameState(GAMESTATE.ASSIGNROLE);
+            /*
+            List<ulong> playerList = new List<ulong>();
+            foreach (ulong ID in getAllPlayerIDs())
+                playerList.Add(ID);
+            setGameStart();
+            string playersInGame = "";
+            for (int i = 0; i < playerList.Count(); i++)
+            {
+                playersInGame += getClient().GetServer(getGameServerID()).GetUser(playerList.ElementAt(i)).NicknameMention + " ";
+            }
+            await getClient().GetChannel(getTextChannelID()).SendMessage("The game has started with players " + playersInGame);
+            setGameState(GAMESTATE.ASSIGNROLE);
+            */
         }
 
         private string getSpies()
@@ -234,6 +261,8 @@ namespace MeepoBotCSharp
                     toSend += player.getPlayerName() + ", ";
                 }
             }
+            toSend = toSend.TrimEnd(' ');
+            toSend = toSend.TrimEnd(',');
             return toSend;
         }
 
@@ -254,34 +283,26 @@ namespace MeepoBotCSharp
                     resistance += player.getPlayerName() + ", ";
                 }
             }
+            spies = spies.TrimEnd(' ');
+            spies = spies.TrimEnd(',');
+            resistance = resistance.TrimEnd(' ');
+            resistance = resistance.TrimEnd(',');
             if (teamRejectCount >= rejectsNeededToFail)
-            {
                 endMessage += "The Spies win because 5 proposed teams for a mission have been rejected!\n";
-                endMessage += "The spies were " + spies + "\n";
-                endMessage += "The resistance were " + resistance;
-                await getClient().GetChannel(getParentChannel()).SendMessage(endMessage);
-            }
             else if (evaluateForGameEnd() == ALLEGIANCE.RESISTANCE)
-            {
                 endMessage += "The Resistance win by succeeding 3 of the 5 missions!\n";
-                endMessage += "The spies were " + spies + "\n";
-                endMessage += "The resistance were " + resistance;
-                await getClient().GetChannel(getParentChannel()).SendMessage(endMessage);
-            }
             else
-            {
                 endMessage += "The Spies win by sabotaging 3 of the 5 missions!\n";
-                endMessage += "The spies were " + spies + "\n";
-                endMessage += "The resistance were " + resistance;
+            endMessage += "The Spies were " + spies + "\n";
+            endMessage += "The Resistance were " + resistance;
                 await getClient().GetChannel(getParentChannel()).SendMessage(endMessage);
-            }
         }
 
         private async void voteMissionLogic()
         {
             teamRejectCount = 0;
             Mission theMission = getCurrentMission();
-            string waitingOn = "Waiting on the following players to submit their votes for mission " + theMission.getMissionNumber() + ":";
+            string waitingOn = "Waiting on the following players to submit their votes to " + getClient().CurrentUser.Mention + " for mission " + theMission.getMissionNumber() + ":";
             bool canProceed = true;
             foreach (ResistancePlayer player in playersOnMission)
             {
@@ -291,8 +312,10 @@ namespace MeepoBotCSharp
                     canProceed = false;
                 }
             }
-            if (gameClock.ElapsedMilliseconds > 20000 && !canProceed)
+            if (gameClock.ElapsedMilliseconds > Constants.Resistance.GAME_SYSTEMMESSAGEDELAY && !canProceed)
             {
+                waitingOn = waitingOn.TrimEnd(' ');
+                waitingOn = waitingOn.TrimEnd(',');
                 await getClient().GetChannel(getTextChannelID()).SendMessage(waitingOn);
                 gameClock.Restart();
                 return;
@@ -364,7 +387,7 @@ namespace MeepoBotCSharp
         private void selectNextMissionLogic()
         {
             setNextMission();
-            if (currentMission >= 5)
+            if (currentMission-1 >= 5)
             {
                 setGameState(GAMESTATE.ENDGAME);
             }
@@ -391,7 +414,7 @@ namespace MeepoBotCSharp
 
         private async void teamVoteLogic()
         {
-            string waitingOn = "Waiting on the following players to submit their votes: ";
+            string waitingOn = "Waiting on the following players to submit their votes to " + getClient().CurrentUser.Mention + " for this team: ";
             bool canProceed = true;
             foreach (ResistancePlayer player in players)
             {
@@ -401,7 +424,7 @@ namespace MeepoBotCSharp
                     canProceed = false;
                 }
             }
-            if (gameClock.ElapsedMilliseconds > 20000 && !canProceed)
+            if (gameClock.ElapsedMilliseconds > Constants.Resistance.GAME_SYSTEMMESSAGEDELAY && !canProceed)
             {
                 await getClient().GetChannel(getTextChannelID()).SendMessage(waitingOn);
                 gameClock.Restart();
@@ -440,15 +463,16 @@ namespace MeepoBotCSharp
                 if (isTeamAccepted(teamAccepts, teamUnAccepts))
                 {
                     await getClient().GetChannel(getTextChannelID()).SendMessage("The team has been accepted by the majority. The mission is a go. " 
-                                                                            + missionPlayerListString() + "please PM me or click " + getClient().CurrentUser.Mention 
+                                                                            + missionPlayerListString() + ", please PM me or click " + getClient().CurrentUser.Mention 
                                                                             + " to submit your votes for the mission.");
                     foreach (ResistancePlayer player in playersOnMission)
                     {
                         getCurrentMission().addParticipant(player.getPlayerName());
                         if (player.getAllegiance() == ALLEGIANCE.RESISTANCE)
-                            await getClient().GetServer(getGameServerID()).GetUser(player.getPlayerID()).SendMessage(getCurrentSituationString()+"Enter !mpass.");
+                            await getClient().GetServer(getGameServerID()).GetUser(player.getPlayerID()).SendMessage(getCurrentSituationString() + "Enter " + Constants.Resistance.PRIVATECOMMAND_PASS + ".");
                         else if (player.getAllegiance() == ALLEGIANCE.SPY)
-                            await getClient().GetServer(getGameServerID()).GetUser(player.getPlayerID()).SendMessage(getCurrentSituationString() + "!mpass to pass this mission.\n!mfail to sabotage this mission.");
+                            await getClient().GetServer(getGameServerID()).GetUser(player.getPlayerID()).SendMessage(getCurrentSituationString() + Constants.Resistance.PRIVATECOMMAND_PASS 
+                                                                                                                + " to pass this mission.\n" + Constants.Resistance.PRIVATECOMMAND_FAIL + " to sabotage this mission.");
                     }  
                     setGameState(GAMESTATE.VOTEMISSION);
                 }
@@ -470,25 +494,23 @@ namespace MeepoBotCSharp
             string toSend = "";
             foreach (ResistancePlayer player in playersOnMission)
                 toSend += player.getPlayerName() + ", ";
+            toSend = toSend.TrimEnd(' ');
+            toSend = toSend.TrimEnd(',');
             return toSend;
         }
 
         private async void setUpGame()
         {
-            missions.Add(new Mission(1, 2, 1));
-            missions.Add(new Mission(2, 3, 1));
-            missions.Add(new Mission(3, 2, 1));
-            missions.Add(new Mission(4, 3, 1));
-            missions.Add(new Mission(5, 3, 1));
-
+            int spycount = getSpyCount();
+            generateMissions();
             List<ulong> holder = new List<ulong>();
             foreach (ulong ID in getAllPlayerIDs())
                 holder.Add(ID);
             Server server = getClient().GetServer(getGameServerID());
             int i = 0;
-            while (i < 2)
+            while (i < spycount)
             {
-                int pickSpy = rand.Next(0, holder.Count());
+                int pickSpy = rand.Next(0, holder.Count()); //Next method is an inclusive lower bound/exclusive upper bound.
                 ulong playerID = holder.ElementAt(pickSpy);
                 string playerName = server.GetUser(playerID).NicknameMention;
                 string playerNonNick = server.GetUser(playerID).Name;
@@ -510,6 +532,75 @@ namespace MeepoBotCSharp
             missionLeader = players.ElementAt(missionLeaderIndex).getPlayerID();
             setGameState(GAMESTATE.MISSIONBRIEFING);
         }
+
+        private int getSpyCount()
+        {
+            int players = getAllPlayerIDs().Count();
+            if (players < 7)
+                return 2;
+            else if (players < 10)
+                return 3;
+            else
+                return 4;
+        }
+
+        private void generateMissions()
+        {
+            int players = getAllPlayerIDs().Count();
+            switch(players)
+            {
+                case 5:
+                    missions.Add(new Mission(1, 2, 1));
+                    missions.Add(new Mission(2, 3, 1));
+                    missions.Add(new Mission(3, 2, 1));
+                    missions.Add(new Mission(4, 3, 1));
+                    missions.Add(new Mission(5, 3, 1));
+                    return;
+                case 6:
+                    missions.Add(new Mission(1, 2, 1));
+                    missions.Add(new Mission(2, 3, 1));
+                    missions.Add(new Mission(3, 4, 1));
+                    missions.Add(new Mission(4, 3, 1));
+                    missions.Add(new Mission(5, 4, 1));
+                    return;
+                case 7:
+                    missions.Add(new Mission(1, 2, 1));
+                    missions.Add(new Mission(2, 3, 1));
+                    missions.Add(new Mission(3, 3, 1));
+                    missions.Add(new Mission(4, 4, 2));
+                    missions.Add(new Mission(5, 4, 1));
+                    return;
+                case 8:
+                    missions.Add(new Mission(1, 3, 1));
+                    missions.Add(new Mission(2, 4, 1));
+                    missions.Add(new Mission(3, 4, 1));
+                    missions.Add(new Mission(4, 5, 2));
+                    missions.Add(new Mission(5, 5, 1));
+                    return;
+                case 9:
+                    missions.Add(new Mission(1, 3, 1));
+                    missions.Add(new Mission(2, 4, 1));
+                    missions.Add(new Mission(3, 4, 1));
+                    missions.Add(new Mission(4, 5, 2));
+                    missions.Add(new Mission(5, 5, 1));
+                    return;
+                case 10:
+                    missions.Add(new Mission(1, 3, 1));
+                    missions.Add(new Mission(2, 4, 1));
+                    missions.Add(new Mission(3, 4, 1));
+                    missions.Add(new Mission(4, 5, 2));
+                    missions.Add(new Mission(5, 5, 1));
+                    return;
+                default:
+                    missions.Add(new Mission(1, 2, 1));
+                    missions.Add(new Mission(2, 3, 1));
+                    missions.Add(new Mission(3, 2, 1));
+                    missions.Add(new Mission(4, 3, 1));
+                    missions.Add(new Mission(5, 3, 1));
+                    return;
+            }
+        }
+
         private string presentMissionInfo()
         {
             Mission theMission = getCurrentMission();
@@ -521,11 +612,13 @@ namespace MeepoBotCSharp
             ResistancePlayer player = players.ElementAt(missionLeaderIndex);
             return ("The current mission leader is " + player.getPlayerNickname());
         }
+
         private void setGameState(GAMESTATE state)
         {
             STATE = state;
             gameClock.Restart();
         }
+
         private GAMESTATE GameState()
         {
             return STATE;
@@ -584,7 +677,7 @@ namespace MeepoBotCSharp
         private string getCurrentSituationString()
         {
             string situationString = "```";
-            situationString += "Current state of resistance operations:\n";
+            situationString += "Current state of resistance operations:\n\n";
             int i = 0;
             foreach (Mission mission in missions)
             {
@@ -595,13 +688,15 @@ namespace MeepoBotCSharp
                         situationString += " SUCCESSFUL.";
                     else
                     {
-                        situationString += " FAILED with " + mission.NumberOfFails() + " sabotages.";
+                        situationString += " FAILED (" + mission.NumberOfFails() + " fails).";
                     }
                     situationString += "\nMission participants: ";
                     foreach (string participant in mission.getParticipants())
                     {
                         situationString += participant + ", ";
                     }
+                    situationString = situationString.TrimEnd(' ');
+                    situationString = situationString.TrimEnd(',');
                     situationString += "\n";
                 }
                 else if (i == currentMission - 1)
@@ -611,7 +706,7 @@ namespace MeepoBotCSharp
                 situationString += "\n";
                 i++;
             }
-            situationString += "```";
+            situationString += "\nThe Resistance must succeed in 3 missions. The spies must sabotage at least 3 missions.```";
             return situationString;
         }
 
@@ -645,12 +740,12 @@ namespace MeepoBotCSharp
         private string provideHelpString()
         {
             string toSend = "";
-            toSend += "**" + Resistance.COMMAND_DRAFT + "**" + " USAGE: !mdraft # # ... - where # corresponds to the # of the player on !mlistplayers. ONLY for mission leaders to draft a team for a mission.\n";
-            toSend += "**" + Resistance.COMMAND_CONFIRMDRAFT + "**" + " USAGE: !mconfirm - will lock in the currently drafted team. ONLY for mission leaders to draft a team for a mission.\n";
-            toSend += "**" + Resistance.COMMAND_UNDRAFT + "**" + " USAGE: !mclear - will clear the currently drafted team to allow drafting for a new team. ONLY for mission leaders to draft a team for a mission.\n";
-            toSend += "**" + Resistance.COMMAND_LISTPLAYERS + "**" + " USAGE: !mlistplayers - returns list of all players in the game.\n";
-            toSend += "**" + Resistance.COMMAND_LISTCURRENTTEAM + "**" + " USAGE: !mlistteam - returns list of currently drafted team.\n";
-            toSend += "**" + Resistance.COMMAND_LISTSITUATION + "**" + " USAGE: !msituation - returns the list of all missions and their statuses.\n";
+            toSend += "**" + Constants.Resistance.COMMAND_DRAFT + "**" + " USAGE: " + Constants.Resistance.COMMAND_DRAFT + " # # ... - where # corresponds to the # of the player on !mlistplayers. ONLY for mission leaders to draft a team for a mission.\n";
+            toSend += "**" + Constants.Resistance.COMMAND_CONFIRMDRAFT + "**" + " USAGE: " + Constants.Resistance.COMMAND_CONFIRMDRAFT + " - will lock in the currently drafted team. ONLY for mission leaders to draft a team for a mission.\n";
+            toSend += "**" + Constants.Resistance.COMMAND_CLEARDRAFT + "**" + " USAGE: " + Constants.Resistance.COMMAND_CLEARDRAFT + " - will clear the currently drafted team to allow drafting for a new team. ONLY for mission leaders to draft a team for a mission.\n";
+            toSend += "**" + Constants.Resistance.COMMAND_LISTPLAYERS + "**" + " USAGE: " + Constants.Resistance.COMMAND_LISTPLAYERS + " - returns list of all players in the game.\n";
+            toSend += "**" + Constants.Resistance.COMMAND_LISTCURRENTTEAM + "**" + " USAGE: " + Constants.Resistance.COMMAND_LISTCURRENTTEAM + " - returns list of currently drafted team.\n";
+            toSend += "**" + Constants.Resistance.COMMAND_LISTSITUATION + "**" + " USAGE: " + Constants.Resistance.COMMAND_LISTSITUATION + " - returns the list of all missions and their statuses.\n";
             return toSend;
         }
 
@@ -668,25 +763,35 @@ namespace MeepoBotCSharp
             int inputLen = toParse.Length;
             Channel gameChannel = getClient().GetChannel(getTextChannelID());
             Server gameServer = getClient().GetServer(getGameServerID());
-            if (command == Constants.COMMAND_DEVKILLGAME && e.User.Id == getHostID())
+            if (command == Constants.COMMAND_CANCELPARTYGAME && e.User.Id == getHostID())
             {
-                setGameForDeletion();
-                await getClient().GetChannel(getParentChannel()).SendMessage("DEV KILLED RESISTANCE LOBBY");
+                if (!getGameStarted())
+                {
+                    setGameForDeletion();
+                    await getClient().GetChannel(getParentChannel()).SendMessage(getGameType() + SystemMessages.MESSAGE_GAMECANCELED);
+                }
+            }
+            else if (command == Constants.COMMAND_STARTGAME && e.User.Id == getHostID())
+            {
+                start = true;
             }
             else if (!getGameStarted())
                 return;
             else
             {
-                
                 if (e.Channel.IsPrivate)
                 {
                     string toSend = "";
                     ResistancePlayer thisPlayer = findPlayer(e.User.Id);
                     if (thisPlayer == null)
                         await getClient().GetChannel(getTextChannelID()).SendMessage("Exception: Resistance Player is null.");
+                    else if (command == Constants.Resistance.PRIVATECOMMAND_ROLECARD)
+                    {
+                        await e.Channel.SendMessage(provideRoleCardString(thisPlayer));
+                    }
                     else if (GameState() == GAMESTATE.VOTEONTEAM)
                     {
-                        if (command == Resistance.PRIVATECOMMAND_ACCEPTTEAM)
+                        if (command == Constants.Resistance.PRIVATECOMMAND_ACCEPTTEAM)
                         {
                             if (thisPlayer.getTeamVote() != TEAMVOTE.NOTSUBMITTED)
                                 toSend += "You have already submitted a vote!";
@@ -698,7 +803,7 @@ namespace MeepoBotCSharp
                             toSend += provideChannelLink();
                             await e.Channel.SendMessage(toSend);
                         }
-                        else if (command == Resistance.PRIVATECOMMAND_REJECTTEAM)
+                        else if (command == Constants.Resistance.PRIVATECOMMAND_REJECTTEAM)
                         {
                             if (thisPlayer.getTeamVote() != TEAMVOTE.NOTSUBMITTED)
                                 toSend += "You have already submitted a vote!";
@@ -713,7 +818,7 @@ namespace MeepoBotCSharp
                     }
                     else if (GameState() == GAMESTATE.VOTEMISSION)
                     {
-                        if (command == Resistance.PRIVATECOMMAND_PASS)
+                        if (command == Constants.Resistance.PRIVATECOMMAND_PASS)
                         {
                             if (thisPlayer.getMissionVote() != MISSIONVOTE.NOTSUBMITTED)
                                 toSend += "You have already submitted a vote!";
@@ -725,14 +830,14 @@ namespace MeepoBotCSharp
                             toSend += provideChannelLink();
                             await e.Channel.SendMessage(toSend);
                         }
-                        else if (command == Resistance.PRIVATECOMMAND_FAIL)
+                        else if (command == Constants.Resistance.PRIVATECOMMAND_FAIL)
                         {
                             if (thisPlayer.getMissionVote() != MISSIONVOTE.NOTSUBMITTED)
                                 toSend += "You have already submitted a vote!";
                             else if (thisPlayer.getAllegiance() == ALLEGIANCE.RESISTANCE)
                             {
                                 thisPlayer.setMissionVote(MISSIONVOTE.PASSED);
-                                toSend += "Resistance members can only choose to pass! Your vote has been submitted as !mpass.";
+                                toSend += "Resistance members can only choose to pass! Your vote has been submitted as " + Constants.Resistance.PRIVATECOMMAND_PASS + ".";
                             }
                             else
                             {
@@ -744,11 +849,11 @@ namespace MeepoBotCSharp
                         }
                     }
                 }
-                else if (command == Resistance.COMMAND_HELP)
+                else if (command == Constants.Resistance.COMMAND_HELP)
                 {
                     await e.Channel.SendMessage(provideHelpString());
                 }
-                else if (command == Resistance.COMMAND_LISTPLAYERS)
+                else if (command == Constants.Resistance.COMMAND_LISTPLAYERS)
                 {
                     string listPlayers = "```";
                     for (int i = 0; i < players.Count(); i++)
@@ -761,7 +866,7 @@ namespace MeepoBotCSharp
                     listPlayers += "```";
                     await getClient().GetChannel(getTextChannelID()).SendMessage(listPlayers);
                 }
-                else if (command == Resistance.COMMAND_LISTCURRENTTEAM)
+                else if (command == Constants.Resistance.COMMAND_LISTCURRENTTEAM)
                 {
                     Mission thisMission = getCurrentMission();
                     if (GameState() == GAMESTATE.TEAMDRAFT || GameState() == GAMESTATE.VOTEONTEAM)
@@ -769,7 +874,7 @@ namespace MeepoBotCSharp
                         await getClient().GetChannel(getTextChannelID()).SendMessage(getCurrentTeamString());
                     }
                 }
-                else if (command == Resistance.COMMAND_CONFIRMDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
+                else if (command == Constants.Resistance.COMMAND_CONFIRMDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
                 {
                     string confirm = "";
                     if (e.User.Id != missionLeader)
@@ -778,10 +883,15 @@ namespace MeepoBotCSharp
                     }
                     else if (playersOnMission.Count() == getCurrentMission().getRequiredPlayers())
                     {
-                        confirm += "After deliberation, " + players.ElementAt(missionLeaderIndex).getPlayerNickname() + " has decided to finalize on the team draft. Go to your PMs (top left corner of Discord client) OR click on " + getClient().CurrentUser.Mention + " and privately message me !maccept if you agree with this team draft, or !mreject if you disagree.";
+                        confirm += "After deliberation, " + players.ElementAt(missionLeaderIndex).getPlayerNickname() 
+                                + " has decided to finalize on the team draft. Go to your PMs (top left corner of Discord client) OR click on " 
+                                + getClient().CurrentUser.Mention + " and privately message me " + Constants.Resistance.PRIVATECOMMAND_ACCEPTTEAM 
+                                + " if you agree with this team draft, or " + Constants.Resistance.PRIVATECOMMAND_REJECTTEAM + " if you disagree.";
                         foreach (ResistancePlayer player in players)
                         {
-                            await gameServer.GetUser(player.getPlayerID()).SendMessage(getCurrentTeamString() + "!maccept if you agree with this draft. \n!mreject if you disagree with this draft.");
+                            await gameServer.GetUser(player.getPlayerID()).SendMessage(getCurrentTeamString() + Constants.Resistance.PRIVATECOMMAND_ACCEPTTEAM 
+                                                                                        + " if you agree with this draft.\n" + Constants.Resistance.PRIVATECOMMAND_REJECTTEAM 
+                                                                                        + " if you disagree with this draft.");
                         }
                         setGameState(GAMESTATE.VOTEONTEAM);
                     }
@@ -791,7 +901,7 @@ namespace MeepoBotCSharp
                     }
                     await gameChannel.SendMessage(confirm);
                 }
-                else if (command == Resistance.COMMAND_CLEARDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
+                else if (command == Constants.Resistance.COMMAND_CLEARDRAFT && GameState() == GAMESTATE.TEAMDRAFT)
                 {
                     string confirm = "";
                     if (e.User.Id != missionLeader)
@@ -805,11 +915,11 @@ namespace MeepoBotCSharp
                     }
                     await gameChannel.SendMessage(confirm);
                 }
-                else if (command == Resistance.COMMAND_LISTSITUATION)
+                else if (command == Constants.Resistance.COMMAND_LISTSITUATION)
                 {
                     await getClient().GetChannel(getTextChannelID()).SendMessage(getCurrentSituationString());
                 }
-                else if (command == Resistance.COMMAND_DRAFT && GameState() == GAMESTATE.TEAMDRAFT)
+                else if (command == Constants.Resistance.COMMAND_DRAFT && GameState() == GAMESTATE.TEAMDRAFT)
                 {
                     string toSend = "";
                     if (e.User.Id != missionLeader)
@@ -820,7 +930,7 @@ namespace MeepoBotCSharp
                     }
                     else if (inputLen < 2)
                     {
-                        toSend += "USAGE: !mdraft # # ..., where # corresponds to the # the player is ordered in !mlistplayers.";
+                        toSend += "USAGE: " + Constants.Resistance.COMMAND_DRAFT + " # # ..., where # corresponds to the # the player is ordered in !mlistplayers.";
                         await gameChannel.SendMessage(toSend);
                         return;
                     }
@@ -831,7 +941,7 @@ namespace MeepoBotCSharp
                             int index;
                             if (playersOnMission.Count() == getCurrentMission().getRequiredPlayers())
                             {
-                                toSend += "The team is drafted. Use !mconfirm to confirm this draft or !mclear to clear this draft.";
+                                toSend += "The team is drafted. Use " + Constants.Resistance.COMMAND_CONFIRMDRAFT + " to confirm this draft or " + Constants.Resistance.COMMAND_CLEARDRAFT + " to clear this draft.";
                                 await gameChannel.SendMessage(toSend + getCurrentTeamString());
                                 return;
                             }

@@ -35,5 +35,4 @@ C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSh
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Debug\RestSharp.xml
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\obj\Debug\MeepoBotCSharp.csprojResolveAssemblyReference.cache
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Debug\Discord.Net.Audio.dll
-C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Debug\NAudio.dll
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Debug\NAudio.xml

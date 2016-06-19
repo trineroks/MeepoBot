@@ -45,7 +45,7 @@ namespace MeepoBotCSharp
             if (!gameStarted && gameClock.ElapsedMilliseconds >= Constants.GAME_DELETIONDELAY)
                 setGameForDeletion();
         }
-        public virtual void checkToStart() { }
+        public virtual async void checkToStart() { }
         public virtual async void evaluateInput(string input, MessageEventArgs e) { }
 
         //IMPLEMENT THESE IN EVERY NEW GAME MODULE

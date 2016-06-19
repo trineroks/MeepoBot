@@ -19,3 +19,5 @@ C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSh
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\obj\Release\MeepoBotCSharp.csprojResolveAssemblyReference.cache
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\obj\Release\MeepoBotCSharp.exe
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\obj\Release\MeepoBotCSharp.pdb
+C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Release\libvideo.dll
+C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Release\YoutubeExtractor.dll
