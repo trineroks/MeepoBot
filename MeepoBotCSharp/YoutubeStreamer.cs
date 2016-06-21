@@ -72,12 +72,11 @@ namespace MeepoBotCSharp
                 {
                     DownloadUrlResolver.DecryptDownloadUrl(video);
                 }
-
                 playbackQueue.Enqueue(video);
                 await response.SendMessage("**Enqueued: " + video.Title + "**");
             } catch (Exception)
             {
-                await response.SendMessage("**Invalid Youtube URL!**");
+                await response.SendMessage("**Youtube is being gay and got rid of flash video format so my code to extract/stream audio is outdated now. Working on a fix...**");
             }
         }
 
@@ -223,8 +222,9 @@ namespace MeepoBotCSharp
             string[] toParse = input.Split(' ');
             string command = toParse[0];
             int inputLen = toParse.Length;
-
-            if (command == Constants.COMMAND_SUMMON)
+            if (command == "")
+                return;
+            else if (command == Constants.COMMAND_SUMMON)
             {
                 var voiceChannel = e.User.VoiceChannel;
                 mainTextChannel = e.Channel;

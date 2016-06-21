@@ -33,7 +33,7 @@ namespace MeepoBotCSharp
             youtubeStreamer = new YoutubeStreamer(client);
             client.ExecuteAndWait(async () =>
             {
-                await client.Connect("EMAIL","PASSWORD");
+                await client.Connect("EMAIL", "PASSWORD");
                 while (true)
                 {
                     youtubeStreamer.PlayerLoop();
@@ -99,7 +99,9 @@ namespace MeepoBotCSharp
             Server server = e.Server;
             if (e.Channel.IsPrivate)
                 return;
-            if (inputLen == 1)
+            else if (command == "")
+                return;
+            else if (inputLen == 1)
             {
                 if (command == Constants.COMMAND_HELP)
                     await e.Channel.SendMessage("Testing Testing 1 2 3");
@@ -222,7 +224,8 @@ namespace MeepoBotCSharp
                     try
                     {
                         await addToRole(rolename, permissions, e.User, e);
-                    } catch (Exception)
+                    }
+                    catch (Exception)
                     {
                         return;
                     }
@@ -231,7 +234,6 @@ namespace MeepoBotCSharp
                 {
                     if (!isHostingGame)
                     {
-                        isHostingGame = true;
                         Discord.Channel text, voice = null;
                         Discord.Role gamerole = null;
                         string channelname = input.Remove(0, Constants.COMMAND_STARTDND.Length + 1);
@@ -240,9 +242,10 @@ namespace MeepoBotCSharp
                         if (gamerole != null)
                         {
                             text = await createNewChannel(channelname, ChannelType.Text, e);
-                            voice = await createNewChannel(channelname + " Voice", ChannelType.Voice, e);
                             if (text != null)
                             {
+                                isHostingGame = true;
+                                voice = await createNewChannel(channelname + " Voice", ChannelType.Voice, e);
                                 ChannelPermissionOverrides memberPermOverride = new ChannelPermissionOverrides(PermValue.Deny, PermValue.Deny, PermValue.Allow,
                                                                                     PermValue.Allow, PermValue.Allow, PermValue.Deny, PermValue.Allow, PermValue.Deny, PermValue.Allow, PermValue.Deny, PermValue.Deny,
                                                                                     PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny);
@@ -291,7 +294,6 @@ namespace MeepoBotCSharp
                     }
                     if (createGame && !isHostingGame)
                     {
-                        isHostingGame = true;
                         Discord.Channel text, voice = null;
                         Discord.Role gamerole = null;
                         string channelname = input.Remove(0, Constants.COMMAND_STARTRESISTANCE.Length + 1);
@@ -300,9 +302,10 @@ namespace MeepoBotCSharp
                         if (gamerole != null)
                         {
                             text = await createNewChannel(channelname, ChannelType.Text, e);
-                            voice = await createNewChannel(channelname + " Voice", ChannelType.Voice, e);
                             if (text != null)
                             {
+                                isHostingGame = true;
+                                voice = await createNewChannel(channelname + " Voice", ChannelType.Voice, e);
                                 ChannelPermissionOverrides memberPermOverride = new ChannelPermissionOverrides(PermValue.Deny, PermValue.Deny, PermValue.Allow,
                                                                                     PermValue.Allow, PermValue.Allow, PermValue.Deny, PermValue.Allow, PermValue.Deny, PermValue.Allow, PermValue.Deny, PermValue.Deny,
                                                                                     PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny, PermValue.Deny);
@@ -332,11 +335,11 @@ namespace MeepoBotCSharp
                 else if (command == Constants.COMMAND_FLOODMESSAGE)
                 {
                     int repeat;
-                    if (Int32.TryParse(toParse[1], out repeat)) 
-                    { 
-                    string message = input.Remove(0, Constants.COMMAND_FLOODMESSAGE.Length + toParse[1].Length + 2);
-                    for (int i = 0; i < repeat; i++ )
-                        await e.Channel.SendMessage(message);
+                    if (Int32.TryParse(toParse[1], out repeat))
+                    {
+                        string message = input.Remove(0, Constants.COMMAND_FLOODMESSAGE.Length + toParse[1].Length + 2);
+                        for (int i = 0; i < repeat; i++)
+                            await e.Channel.SendMessage(message);
                     }
                     else
                         await e.Channel.SendMessage("Invalid use of command, nerd");
@@ -377,11 +380,11 @@ namespace MeepoBotCSharp
 
         private bool commandRollDice(string command)
         {
-            if (command[0] == '!')
-            {
-                if (Char.ToLower(command[1]) == 'd')
-                    return true;
-            }
+                if (command[0] == '!')
+                {
+                    if (Char.ToLower(command[1]) == 'd')
+                        return true;
+                }
             return false;
         }
 

@@ -64,23 +64,15 @@ namespace MeepoBotCSharp
 
         public class DnD
         {
-            public static string PRIVATECOMMAND_HOSTLISTPLAYERS = COMMAND_PREFIX + "players";
+            public static string PRIVATECOMMAND_HELP = COMMAND_PREFIX + "help";
+            public static string PRIVATECOMMAND_HELPONE = COMMAND_PREFIX + "help1";
+            public static string PRIVATECOMMAND_HELPTWO = COMMAND_PREFIX + "help2";
+
+            public static string PRIVATECOMMAND_HOSTLISTCARDS = COMMAND_PREFIX + "list";
             public static string PRIVATECOMMAND_HOSTSELECTCARD = COMMAND_PREFIX + "select";
             
             public static string PRIVATECOMMAND_HOSTEDITELEMENT = COMMAND_PREFIX + "edit";
             public static string PRIVATECOMMAND_HOSTALLEDITELEMENT = COMMAND_PREFIX + "alledit";
-
-            public static string PRIVATECOMMAND_HOSTSORTELEMENT = COMMAND_PREFIX + "sort";
-            public static string PRIVATECOMMAND_HOSTALLSORTELEMENT = COMMAND_PREFIX + "allsort";
-
-            public static string PRIVATECOMMAND_HOSTADDFIELD = COMMAND_PREFIX + "field";
-            public static string PRIVATECOMMAND_HOSTALLADDFIELD = COMMAND_PREFIX + "allfield";
-
-            public static string PRIVATECOMMAND_HOSTADDFIELDLIST = COMMAND_PREFIX + "list";
-            public static string PRIVATECOMMAND_HOSTALLADDFIELDLIST = COMMAND_PREFIX + "alllist";
-
-            public static string PRIVATECOMMAND_HOSTDELETEFIELD = COMMAND_PREFIX + "delete";
-            public static string PRIVATECOMMAND_HOSTALLDELETEFIELD = COMMAND_PREFIX + "alldelete";
 
             public static string PRIVATECOMMAND_HOSTADDTOLIST = COMMAND_PREFIX + "addto";
             public static string PRIVATECOMMAND_HOSTALLADDTOLIST = COMMAND_PREFIX + "alladdto";
@@ -88,9 +80,33 @@ namespace MeepoBotCSharp
             public static string PRIVATECOMMAND_HOSTREMOVEFROMLIST = COMMAND_PREFIX + "remove";
             public static string PRIVATECOMMAND_HOSTALLREMOVEFROMLIST = COMMAND_PREFIX + "allremove";
 
+            public static string PRIVATECOMMAND_HOSTSORTELEMENT = COMMAND_PREFIX + "sort";
+            public static string PRIVATECOMMAND_HOSTALLSORTELEMENT = COMMAND_PREFIX + "allsort";
+
+            public static string PRIVATECOMMAND_HOSTADDFIELDTEXT = COMMAND_PREFIX + "addtext";
+            public static string PRIVATECOMMAND_HOSTALLADDFIELDTEXT = COMMAND_PREFIX + "addalltext";
+
+            public static string PRIVATECOMMAND_HOSTADDFIELDLIST = COMMAND_PREFIX + "addlist";
+            public static string PRIVATECOMMAND_HOSTALLADDFIELDLIST = COMMAND_PREFIX + "addalllist";
+
+            public static string PRIVATECOMMAND_HOSTDELETEFIELD = COMMAND_PREFIX + "deletefield";
+            public static string PRIVATECOMMAND_HOSTALLDELETEFIELD = COMMAND_PREFIX + "alldeletefield";
+
+            public static string PRIVATECOMMAND_HOSTCOMMONFIELDS = COMMAND_PREFIX + "common";
+
             public static string PRIVATECOMMAND_HOSTDESELECT = COMMAND_PREFIX + "deselect";
 
+            public static string PRIVATECOMMAND_HOSTCREATENPCCARD = COMMAND_PREFIX + "create";
+            public static string PRIVATECOMMAND_HOSTDELETENPCCARD = COMMAND_PREFIX + "delete";
+
+            public static string PRIVATECOMMAND_HOSTEDITNPCCARDS = COMMAND_PREFIX + "npc";
+            public static string PRIVATECOMMAND_HOSTEDITPLAYERCARDS = COMMAND_PREFIX + "player";
+
+            public static string COMMAND_HOSTPRESENTPLAYER = COMMAND_PREFIX + "showplayer";
+            public static string COMMAND_HOSTPRESENTNPC = COMMAND_PREFIX + "shownpc";
+
             public static string PRIVATECOMMAND_GETPLAYERCARD = COMMAND_PREFIX + "card";
+            public static string COMMAND_PRINTALLVALUES = COMMAND_PREFIX + "print";
         }
 
         public class Resistance

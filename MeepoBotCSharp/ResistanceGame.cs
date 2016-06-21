@@ -740,7 +740,7 @@ namespace MeepoBotCSharp
         private string provideHelpString()
         {
             string toSend = "";
-            toSend += "**" + Constants.Resistance.COMMAND_DRAFT + "**" + " USAGE: " + Constants.Resistance.COMMAND_DRAFT + " # # ... - where # corresponds to the # of the player on !mlistplayers. ONLY for mission leaders to draft a team for a mission.\n";
+            toSend += "**" + Constants.Resistance.COMMAND_DRAFT + "**" + " USAGE: " + Constants.Resistance.COMMAND_DRAFT + " #/name #/name ..., where # corresponds to the # the player is ordered in !mlistplayers, or their name. ONLY for mission leaders to draft a team for a mission.\n";
             toSend += "**" + Constants.Resistance.COMMAND_CONFIRMDRAFT + "**" + " USAGE: " + Constants.Resistance.COMMAND_CONFIRMDRAFT + " - will lock in the currently drafted team. ONLY for mission leaders to draft a team for a mission.\n";
             toSend += "**" + Constants.Resistance.COMMAND_CLEARDRAFT + "**" + " USAGE: " + Constants.Resistance.COMMAND_CLEARDRAFT + " - will clear the currently drafted team to allow drafting for a new team. ONLY for mission leaders to draft a team for a mission.\n";
             toSend += "**" + Constants.Resistance.COMMAND_LISTPLAYERS + "**" + " USAGE: " + Constants.Resistance.COMMAND_LISTPLAYERS + " - returns list of all players in the game.\n";
@@ -756,6 +756,30 @@ namespace MeepoBotCSharp
         }
         */
 
+        private ResistancePlayer retrievePlayer(string command)
+        {
+            int playerIndex;
+            foreach (ResistancePlayer player in players)
+            {
+                if (player.getPlayerName() == command)
+                    return player;
+            }
+            foreach (ResistancePlayer player in players)
+            {
+                if (player.getPlayerName().Contains(command))
+                    return player;
+            }
+            if (Int32.TryParse(command, out playerIndex))
+            {
+                int index = playerIndex - 1;
+                if (index < 0 || index >= players.Count())
+                    return null;
+                else
+                    return players.ElementAt(index);
+            }
+            return null;
+        }
+
         public override async void evaluateInput(string input, MessageEventArgs e)
         {
             string[] toParse = input.Split(' ');
@@ -763,7 +787,9 @@ namespace MeepoBotCSharp
             int inputLen = toParse.Length;
             Channel gameChannel = getClient().GetChannel(getTextChannelID());
             Server gameServer = getClient().GetServer(getGameServerID());
-            if (command == Constants.COMMAND_CANCELPARTYGAME && e.User.Id == getHostID())
+            if (command == "")
+                return;
+            else if (command == Constants.COMMAND_CANCELPARTYGAME && e.User.Id == getHostID())
             {
                 if (!getGameStarted())
                 {
@@ -930,7 +956,7 @@ namespace MeepoBotCSharp
                     }
                     else if (inputLen < 2)
                     {
-                        toSend += "USAGE: " + Constants.Resistance.COMMAND_DRAFT + " # # ..., where # corresponds to the # the player is ordered in !mlistplayers.";
+                        toSend += "USAGE: " + Constants.Resistance.COMMAND_DRAFT + " #/name #/name ..., where # corresponds to the # the player is ordered in !mlistplayers, or their name.";
                         await gameChannel.SendMessage(toSend);
                         return;
                     }
@@ -938,19 +964,18 @@ namespace MeepoBotCSharp
                     {
                         for (int i = 1; i < toParse.Length; i++)
                         {
-                            int index;
                             if (playersOnMission.Count() == getCurrentMission().getRequiredPlayers())
                             {
                                 toSend += "The team is drafted. Use " + Constants.Resistance.COMMAND_CONFIRMDRAFT + " to confirm this draft or " + Constants.Resistance.COMMAND_CLEARDRAFT + " to clear this draft.";
                                 await gameChannel.SendMessage(toSend + getCurrentTeamString());
                                 return;
                             }
-                            else if (Int32.TryParse(toParse[i], out index))
+                            else
                             {
-                                if (index <= players.Count() && index > 0)
+                                bool dontAdd = false;
+                                ResistancePlayer toAddPlayer = retrievePlayer(toParse[i]);
+                                if (toAddPlayer != null)
                                 {
-                                    bool dontAdd = false;
-                                    ResistancePlayer toAddPlayer = players.ElementAt(index - 1);
                                     if (!playersOnMission.Any())
                                     {
                                         playersOnMission.Add(toAddPlayer);
