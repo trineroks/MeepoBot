@@ -89,6 +89,10 @@ namespace MeepoBotCSharp
         {
             return Players.ElementAt(index);
         }
+        public string provideChannelLink()
+        {
+            return "\nClick " + client.GetChannel(TextChannelID).Mention + " to return to the game channel.";
+        }
         public List<ulong> getAllPlayerIDs()
         {
             return Players;

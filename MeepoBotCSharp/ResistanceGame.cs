@@ -720,11 +720,6 @@ namespace MeepoBotCSharp
             return null;
         }
 
-        private string provideChannelLink()
-        {
-            return "\nClick " + getClient().GetChannel(getTextChannelID()).Mention + " to return to the game channel.";
-        }
-
         private string provideRoleCardString(ResistancePlayer player)
         {
             string toSend = "";

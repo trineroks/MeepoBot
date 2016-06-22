@@ -33,7 +33,7 @@ namespace MeepoBotCSharp
             youtubeStreamer = new YoutubeStreamer(client);
             client.ExecuteAndWait(async () =>
             {
-                await client.Connect("EMAIL", "PASSWORD");
+                await client.Connect("EMAIL","PASSWORD");
                 while (true)
                 {
                     youtubeStreamer.PlayerLoop();
@@ -265,6 +265,10 @@ namespace MeepoBotCSharp
 
                                 Console.WriteLine("Game was created at server: " + server.Id);
                             }
+                            else
+                            {
+                                await gamerole.Delete();
+                            }
                         }
                     }
                     else
@@ -324,6 +328,10 @@ namespace MeepoBotCSharp
                                 await e.Channel.SendMessage(resistanceGame.getGameType() + SystemMessages.MESSAGE_GAMECREATED + text.Mention);
 
                                 Console.WriteLine("Game was created at server: " + server.Id);
+                            }
+                            else
+                            {
+                                await gamerole.Delete();
                             }
                         }
                     }

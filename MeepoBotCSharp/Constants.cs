@@ -105,6 +105,9 @@ namespace MeepoBotCSharp
             public static string COMMAND_HOSTPRESENTPLAYER = COMMAND_PREFIX + "showplayer";
             public static string COMMAND_HOSTPRESENTNPC = COMMAND_PREFIX + "shownpc";
 
+            public static string PRIVATECOMMAND_HOSTCLONECARD = COMMAND_PREFIX + "clone"; //only for NPCs
+            public static string PRIVATECOMMAND_HOSTEDITTITLE = COMMAND_PREFIX + "title"; //only for NPCs
+
             public static string PRIVATECOMMAND_GETPLAYERCARD = COMMAND_PREFIX + "card";
             public static string COMMAND_PRINTALLVALUES = COMMAND_PREFIX + "print";
         }

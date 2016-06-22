@@ -79,19 +79,19 @@ namespace MeepoBotCSharp
                     string[] toParse = customParser(parseContent);
                     for (int i = 0; i < toParse.Count(); i++)
                     {
-                        _content.Add(toParse[i]);
+                        if (toParse[i] != "")
+                            _content.Add(toParse[i]);
                     }
                 }
             }
 
             public void addToList(string parseContent)
             {
-                if (parseContent == "")
-                    return;
                 string[] toParse = customParser(parseContent);
                 for (int i = 0; i < toParse.Count(); i++)
                 {
-                    _content.Add(toParse[i]);
+                    if (toParse[i] != "")
+                        _content.Add(toParse[i]);
                 }
             }
 
@@ -173,6 +173,15 @@ namespace MeepoBotCSharp
         {
             private List<Element> _fields = new List<Element>();
             private string _name;
+
+            public Card(Card card)
+            {
+                _name = card.getName();
+                foreach(Element element in card.getElements())
+                {
+                    _fields.Add(copyElement(element));
+                }
+            }
             
             public Card(string name)
             {
@@ -302,6 +311,33 @@ namespace MeepoBotCSharp
                 }
                 toSend += "```";
                 return toSend;
+            }
+
+            private Element copyElement(Element element)
+            {
+                FieldElement fieldElement = element as FieldElement;
+                ListElement listElement = element as ListElement;
+                if (fieldElement != null)
+                {
+                    return copyFieldElement(fieldElement);
+                }
+                else if (listElement != null)
+                {
+                    return copyListElement(listElement);
+                }
+                return null;
+            }
+
+            private ListElement copyListElement(ListElement element)
+            {
+                ListElement toReturn = new ListElement(element.getName(), element.getContent());
+                return toReturn;
+            }
+
+            private FieldElement copyFieldElement(FieldElement element)
+            {
+                FieldElement toReturn = new FieldElement(element.getName(), element.getContent());
+                return toReturn;
             }
 
             private string checkIfList(Element element)
@@ -526,7 +562,7 @@ namespace MeepoBotCSharp
                         }
                         else if (command == Constants.DnD.PRIVATECOMMAND_HOSTSELECTCARD)
                         {
-                            if (toParse.Count() < 2 || toParse.Count() > 2)
+                            if (toParse.Count() < 2)
                             {
                                 await e.Channel.SendMessage("USAGE: " + Constants.DnD.PRIVATECOMMAND_HOSTSELECTCARD
                                                             + " #/name, where # corresponds to the card's position on "
@@ -1186,6 +1222,42 @@ namespace MeepoBotCSharp
                             editingPlayer = true;
                             await e.Channel.SendMessage("Now editing Player Cards.");
                         }
+                        else if (command == Constants.DnD.PRIVATECOMMAND_HOSTCLONECARD)
+                        {
+                            if (toParse.Count() < 2)
+                            {
+                                await e.Channel.SendMessage("USAGE: " + Constants.DnD.PRIVATECOMMAND_HOSTCLONECARD
+                                                            + " #/title, where #/title is the position/title of the card you wish to clone to NPC cards.");
+                                return;
+                            }
+                            Card toClone = retrieveCard(toParse[1]);
+                            if (toClone != null)
+                            {
+                                NPCCards.Add(new Card(toClone));
+                                await e.Channel.SendMessage("Card successfully cloned to NPC cards.");
+                                return;
+                            }
+                        }
+                        else if (command == Constants.DnD.PRIVATECOMMAND_HOSTEDITTITLE)
+                        {
+                            if (toParse.Count() < 3 || editingPlayer)
+                            {
+                                await e.Channel.SendMessage("USAGE: " + Constants.DnD.PRIVATECOMMAND_HOSTEDITTITLE
+                                                            + " #/title title, where #/title is the position/title of the card and title is the new title of the card. Works only on NPC cards.");
+                                return;
+                            }
+                            Card toClone = retrieveCard(toParse[1]);
+                            if (toClone != null)
+                            {
+                                string content = input.Remove(0, command.Length + 1); //!medit "   2       content"
+                                content = content.TrimStart(' ');//!medit "2       content"
+                                content = content.Remove(0, toParse[1].Length + 1); //!medit 2 "     content"
+                                content = content.TrimStart(' '); //!medit 2 "content"
+                                toClone.setName(content);
+                                await e.Channel.SendMessage("Card title successfully changed to " + content);
+                                return;
+                            }
+                        }
                     }
                 }
                 else //commands on the main game channel
@@ -1612,11 +1684,6 @@ namespace MeepoBotCSharp
         private GAMESTATE GameState()
         {
             return STATE;
-        }
-
-        private string provideChannelLink()
-        {
-            return "\nClick " + getClient().GetChannel(getTextChannelID()).Mention + " to return to the game channel.";
         }
     }
 }
