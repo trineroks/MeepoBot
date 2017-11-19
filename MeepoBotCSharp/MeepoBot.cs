@@ -21,6 +21,7 @@ namespace MeepoBotCSharp
         private List<Game> PartyGames = new List<Game>();
         private Random rand = new Random();
         private bool isHostingGame = false;
+        private SecretSanta secretSanta;
 
         public MeepoBot() 
         {
@@ -31,30 +32,24 @@ namespace MeepoBotCSharp
             });
             client.MessageReceived += bot_MessageReceived;
             youtubeStreamer = new YoutubeStreamer(client);
-            client.ExecuteAndWait(async () =>
-            {
-                await client.Connect("EMAIL","PASSWORD");
-                while (true)
-                {
+            client.ExecuteAndWait(async () => {
+                await client.Connect("letsgoplaydrums@hotmail.com", "1GoodDiscord");
+                while (true) {
                     youtubeStreamer.PlayerLoop();
-                    try
-                    {
-                        if (PartyGames.Any())
-                        {
-                            for (int i = 0; i < PartyGames.Count(); i++)
-                            {
+                    try {
+                        if (PartyGames.Any()) {
+                            for (int i = 0; i < PartyGames.Count(); i++) {
                                 Game game = PartyGames.ElementAt(i);
                                 game.GameLoop();
-                                if (game.isMarkedForDeletion())
-                                {
+                                if (game.isMarkedForDeletion()) {
                                     await client.GetChannel(game.getParentChannel()).SendMessage(game.getGameType() + SystemMessages.MESSAGE_GAMEDELETED);
                                     await cleanupGame(game);
                                     i--;
                                 }
                             }
                         }
-                    }catch(Exception)
-                    {
+                    }
+                    catch (Exception) {
                         Console.WriteLine("No games");
                     }
                 }
@@ -88,6 +83,9 @@ namespace MeepoBotCSharp
                 }
             }
             youtubeStreamer.evaluateInput(e.Message.Text, e);
+            if (secretSanta != null) {
+                secretSanta.evaluateInput(e.Message.RawText, e);
+            }
             parseInput(e.Message.Text, e);
         }
 
@@ -199,51 +197,46 @@ namespace MeepoBotCSharp
                         return;
                     }
                 }
+                //The Secret Santa module
+                else if (command == Constants.COMMAND_STARTSECRETSANTA) {
+                    secretSanta = new SecretSanta(server, client);
+                    Console.WriteLine("Secret Santa initialized");
+                }
             }
             else if (inputLen > 1)
             {
-                if (command == Constants.COMMAND_SETGAME)
-                {
+                if (command == Constants.COMMAND_SETGAME) {
                     string game = input.Remove(0, Constants.COMMAND_SETGAME.Length + 1);
                     client.SetGame(game);
                 }
-                else if (command == Constants.COMMAND_CREATECHANNEL)
-                {
+                else if (command == Constants.COMMAND_CREATECHANNEL) {
                     string channelname = input.Remove(0, Constants.COMMAND_CREATECHANNEL.Length + 1);
                     await createNewChannel(channelname, ChannelType.Text, e);
                 }
-                else if (command == Constants.COMMAND_TTS)
-                {
+                else if (command == Constants.COMMAND_TTS) {
                     string message = input.Remove(0, Constants.COMMAND_TTS.Length + 1);
                     await e.Channel.SendTTSMessage(message);
                 }
-                else if (command == Constants.COMMAND_SETROLE)
-                {
+                else if (command == Constants.COMMAND_SETROLE) {
                     string rolename = input.Remove(0, Constants.COMMAND_SETROLE.Length + 1);
                     ServerPermissions permissions = new ServerPermissions(true);
-                    try
-                    {
+                    try {
                         await addToRole(rolename, permissions, e.User, e);
                     }
-                    catch (Exception)
-                    {
+                    catch (Exception) {
                         return;
                     }
                 }
-                else if (command == Constants.COMMAND_STARTDND)
-                {
-                    if (!isHostingGame)
-                    {
+                else if (command == Constants.COMMAND_STARTDND) {
+                    if (!isHostingGame) {
                         Discord.Channel text, voice = null;
                         Discord.Role gamerole = null;
                         string channelname = input.Remove(0, Constants.COMMAND_STARTDND.Length + 1);
                         ServerPermissions permissions = new ServerPermissions();
                         gamerole = await addToRole(Constants.GAME_DNDGAME, permissions, e.User, e);
-                        if (gamerole != null)
-                        {
+                        if (gamerole != null) {
                             text = await createNewChannel(channelname, ChannelType.Text, e);
-                            if (text != null)
-                            {
+                            if (text != null) {
                                 isHostingGame = true;
                                 voice = await createNewChannel(channelname + " Voice", ChannelType.Voice, e);
                                 ChannelPermissionOverrides memberPermOverride = new ChannelPermissionOverrides(PermValue.Deny, PermValue.Deny, PermValue.Allow,
@@ -265,49 +258,40 @@ namespace MeepoBotCSharp
 
                                 Console.WriteLine("Game was created at server: " + server.Id);
                             }
-                            else
-                            {
+                            else {
                                 await gamerole.Delete();
                             }
                         }
                     }
-                    else
-                    {
+                    else {
                         Console.WriteLine(SystemMessages.MESSAGE_GAMEHASSTARTED);
                     }
                 }
-                else if (command == Constants.COMMAND_STARTRESISTANCE)
-                {
+                else if (command == Constants.COMMAND_STARTRESISTANCE) {
                     bool createGame = false;
                     if (!PartyGames.Any())
                         createGame = true;
                     Game game = null;
-                    if (!createGame && PartyGames.Any())
-                    {
+                    if (!createGame && PartyGames.Any()) {
                         int i = 0; bool found = false;
-                        while (i < PartyGames.Count())
-                        {
+                        while (i < PartyGames.Count()) {
                             game = PartyGames.ElementAt(i);
-                            if (game.getGameServerID() == server.Id)
-                            {
+                            if (game.getGameServerID() == server.Id) {
                                 found = true;
                             }
                             i++;
                         }
                         createGame = found ? false : true;
                     }
-                    if (createGame && !isHostingGame)
-                    {
+                    if (createGame && !isHostingGame) {
                         Discord.Channel text, voice = null;
                         Discord.Role gamerole = null;
                         string channelname = input.Remove(0, Constants.COMMAND_STARTRESISTANCE.Length + 1);
                         ServerPermissions permissions = new ServerPermissions();
                         gamerole = await addToRole(Constants.GAME_RESISTANCE, permissions, e.User, e);
-                        if (gamerole != null)
-                        {
+                        if (gamerole != null) {
                             text = await createNewChannel(channelname, ChannelType.Text, e);
-                            if (text != null)
-                            {
+                            if (text != null) {
                                 isHostingGame = true;
                                 voice = await createNewChannel(channelname + " Voice", ChannelType.Voice, e);
                                 ChannelPermissionOverrides memberPermOverride = new ChannelPermissionOverrides(PermValue.Deny, PermValue.Deny, PermValue.Allow,
@@ -329,22 +313,18 @@ namespace MeepoBotCSharp
 
                                 Console.WriteLine("Game was created at server: " + server.Id);
                             }
-                            else
-                            {
+                            else {
                                 await gamerole.Delete();
                             }
                         }
                     }
-                    else
-                    {
+                    else {
                         Console.WriteLine(SystemMessages.MESSAGE_GAMEHASSTARTED);
                     }
                 }
-                else if (command == Constants.COMMAND_FLOODMESSAGE)
-                {
+                else if (command == Constants.COMMAND_FLOODMESSAGE) {
                     int repeat;
-                    if (Int32.TryParse(toParse[1], out repeat))
-                    {
+                    if (Int32.TryParse(toParse[1], out repeat)) {
                         string message = input.Remove(0, Constants.COMMAND_FLOODMESSAGE.Length + toParse[1].Length + 2);
                         for (int i = 0; i < repeat; i++)
                             await e.Channel.SendMessage(message);

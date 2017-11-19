@@ -80,6 +80,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinReader.cs" />
+    <Compile Include="BinSerializer.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="DnDGame.cs" />
@@ -88,6 +90,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResistanceGame.cs" />
+    <Compile Include="SecretSanta.cs" />
     <Compile Include="YoutubeStreamer.cs" />
   </ItemGroup>
   <ItemGroup>

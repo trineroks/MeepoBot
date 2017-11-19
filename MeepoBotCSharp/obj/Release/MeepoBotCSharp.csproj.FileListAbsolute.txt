@@ -21,3 +21,26 @@ C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSh
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\obj\Release\MeepoBotCSharp.pdb
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Release\libvideo.dll
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Release\YoutubeExtractor.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\MeepoBotCSharp.exe.config
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\MeepoBotCSharp.exe
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\MeepoBotCSharp.pdb
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Discord.Net.Audio.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Discord.Net.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\libvideo.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\NAudio.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Newtonsoft.Json.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Nito.AsyncEx.Concurrent.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Nito.AsyncEx.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Nito.AsyncEx.Enlightenment.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\RestSharp.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\WebSocket4Net.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\YoutubeExtractor.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Newtonsoft.Json.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Nito.AsyncEx.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Nito.AsyncEx.Concurrent.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\Nito.AsyncEx.Enlightenment.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Release\RestSharp.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Release\MeepoBotCSharp.csprojResolveAssemblyReference.cache
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Release\MeepoBotCSharp.csproj.CoreCompileInputs.cache
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Release\MeepoBotCSharp.exe
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Release\MeepoBotCSharp.pdb

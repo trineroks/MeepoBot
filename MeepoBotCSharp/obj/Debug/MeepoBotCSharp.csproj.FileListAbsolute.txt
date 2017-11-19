@@ -36,3 +36,23 @@ C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSh
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\obj\Debug\MeepoBotCSharp.csprojResolveAssemblyReference.cache
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Debug\Discord.Net.Audio.dll
 C:\Users\scjaso\Documents\Visual Studio 2015\Projects\MeepoBotCSharp\MeepoBotCSharp\bin\Debug\NAudio.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\MeepoBotCSharp.exe.config
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\MeepoBotCSharp.exe
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\MeepoBotCSharp.pdb
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Discord.Net.Audio.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Discord.Net.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Newtonsoft.Json.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Nito.AsyncEx.Concurrent.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Nito.AsyncEx.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Nito.AsyncEx.Enlightenment.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\RestSharp.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\WebSocket4Net.dll
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Newtonsoft.Json.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Nito.AsyncEx.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Nito.AsyncEx.Concurrent.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\Nito.AsyncEx.Enlightenment.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\bin\Debug\RestSharp.xml
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Debug\MeepoBotCSharp.csprojResolveAssemblyReference.cache
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Debug\MeepoBotCSharp.csproj.CoreCompileInputs.cache
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Debug\MeepoBotCSharp.exe
+C:\Users\letsg\Documents\VisualStudioProjects\MeepoBot\MeepoBotCSharp\obj\Debug\MeepoBotCSharp.pdb

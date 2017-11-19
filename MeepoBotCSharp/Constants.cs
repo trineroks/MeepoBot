@@ -31,6 +31,7 @@ namespace MeepoBotCSharp
         public static string COMMAND_SUMMON = COMMAND_PREFIX + "summon";
 
         public static string COMMAND_STARTRESISTANCE = COMMAND_PREFIX + "resistance";
+        public static string COMMAND_STARTSECRETSANTA = COMMAND_PREFIX + "santa";
         public static string COMMAND_STARTDND = COMMAND_PREFIX + "dnd";
         public static string COMMAND_JOINPARTYGAME = COMMAND_PREFIX + "join";
         public static string COMMAND_LEAVEPARTYGAME = COMMAND_PREFIX + "leave";
@@ -130,6 +131,18 @@ namespace MeepoBotCSharp
             public static string PRIVATECOMMAND_ROLECARD = COMMAND_PREFIX + "card";
 
             public static long GAME_SYSTEMMESSAGEDELAY = 30000;
+        }
+
+        public class SecretSanta
+        {
+            public static string COMMAND_ADDPARTICIPANT = COMMAND_PREFIX + "sadd";
+            public static string COMMAND_STARTSANTA = COMMAND_PREFIX + "sstart";
+            public static string COMMAND_ENDDATE = COMMAND_PREFIX + "senddate";
+            public static string COMMAND_WIPEPARTICIPANTS = COMMAND_PREFIX + "swipe";
+            public static string COMMAND_PRINTPARTICIPANTS = COMMAND_PREFIX + "sprint";
+            public static string COMMAND_SAVETEST = COMMAND_PREFIX + "ssave";
+            public static string COMMAND_LOADTEST = COMMAND_PREFIX + "sload";
+            public static string COMMAND_SENDSANTACARDS = COMMAND_PREFIX + "ssantacards";
         }
     }
 
