@@ -4,9 +4,6 @@ using Discord;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
 namespace MeepoBotCSharp 
@@ -25,6 +22,7 @@ namespace MeepoBotCSharp
         private Channel textChannel;
         private static Random rand = new Random();
         private int month, day, year;
+        private int[] edges; //These will define the relationships in Secret Santa
 
         public SecretSanta(Server server, DiscordClient client) 
         {
@@ -38,12 +36,17 @@ namespace MeepoBotCSharp
         private void shuffle() 
         {
             int i = participants.Count;
+            edges = new int[i];
+            for (int p = 0; p < i; p++) 
+            {
+                edges[p] = p;
+            }
             while (i > 1) {
                 i--;
                 int j = rand.Next(i + 1);
-                User value = participants[j];
-                participants[j] = participants[i];
-                participants[i] = value;
+                int value = edges[j];
+                edges[j] = edges[i];
+                edges[i] = value;
             }
         }
 
@@ -62,21 +65,29 @@ namespace MeepoBotCSharp
                 participants.Add(user);
         }
 
-        public async void startSanta() 
+        public void startSanta() 
         {
             shuffle();
-            await textChannel.SendMessage("Relationships set:");
-            for (int i = 0; i < participants.Count; i++) 
-            {
-                string msg = "";
-                int j = i + 1;
-                if (j >= participants.Count)
-                    j = 0;
-                msg += participants[i] + " --> " + participants[j];
-                await textChannel.SendMessage(msg);
-                await participants[i].SendMessage(provideSantaCard(participants[i], participants[j]));
-            }
             saveParticipantsAndRelationship();
+        }
+
+        public async void sendSantaCards() 
+        {
+            loadParticipantsAndRelationship();
+            string msg = "";
+            await textChannel.SendMessage("Relationships set:");
+            for (int i = 0; i < edges.Length; i++) {
+                int j = edges[i];
+                int k;
+                if (i + 1 >= edges.Length)
+                    k = edges[0];
+                else
+                    k = edges[i + 1];
+                msg += participants[j] + " --> " + participants[k] + "\n";
+                
+                //await relationships[i].SendMessage(provideSantaCard(relationships[i], relationships[j]));
+            }
+            await textChannel.SendMessage(msg);
         }
 
         public void saveParticipantsAndRelationship() 
@@ -85,6 +96,9 @@ namespace MeepoBotCSharp
             int arrlen = 1 + (len * 8); //each ulong takes up 8 bytes. Confidence that this will not exceed a 2GB size array (might change later)
                                         //this is added to 1 because we must include the first byte to hold the container size.
             arrlen += 12; //4 bytes for each 32bit int in the date section
+
+            arrlen += len * 4; //this will the be randomized seed that gets saved - this is to obfuscate who has who while maintaining the randomization.
+
             BinSerializer serializer = new BinSerializer(arrlen);
             serializer.writeByte((byte)len);
             foreach (User participant in participants) 
@@ -94,6 +108,12 @@ namespace MeepoBotCSharp
             serializer.writeInt(month);
             serializer.writeInt(day);
             serializer.writeInt(year);
+
+            for (int i = 0; i < edges.Length; i++) 
+            {
+                serializer.writeInt(edges[i]);
+            }
+
             File.WriteAllBytes("SecretSanta.roks", serializer.data);
 
             string msg = "File saved, inputting the following: ";
@@ -122,6 +142,13 @@ namespace MeepoBotCSharp
             month = reader.readInt();
             day = reader.readInt();
             year = reader.readInt();
+
+            edges = new int[participantCount];
+
+            for (int i = 0; i < participantCount; i++) 
+            {
+                edges[i] = reader.readInt();
+            }
 
             string msg = "File loaded, outputting the following: " + participantCount + " participants named: ";
             foreach (User participant in participants) {
@@ -203,22 +230,15 @@ namespace MeepoBotCSharp
             }
             else if (command == Constants.SecretSanta.COMMAND_SENDSANTACARDS) 
             {
-                for (int i = 0; i < participants.Count; i++) {
-                    string msg = "";
-                    int j = i + 1;
-                    if (j >= participants.Count)
-                        j = 0;
-                    msg += participants[i] + " --> " + participants[j];
-                    await textChannel.SendMessage(msg);
-                    await participants[i].SendMessage(provideSantaCard(participants[i], participants[j]));
-                }
+                sendSantaCards();
             }
         }
 
         private string provideSantaCard(User recipient, User giftRecipient) 
         {
-            string msg = "THIS IS A TEST MESSAGE. YOUR NAME IS " + recipient.Name + " AND YOU ARE LINKED WITH " + giftRecipient.Name + ". THE DEADLINE IS " + month + "/" + day + "/" + year +
-                        ". THIS IS NOT THE ACTUAL SECRET SANTA MESSAGE, ONLY FOR TESTING!!!!";
+            string msg = "v2 Secret Santa Module. Disclaimer: This is not the official message!! Your name is " + recipient.Name + 
+                " and you are paired with " + giftRecipient.Name + ". The deadline is " + month + "/" + day + "/" + year +
+                        ". Disclaimer: This is not the official message!!";
             return msg;
         }
 
