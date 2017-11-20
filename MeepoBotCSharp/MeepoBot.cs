@@ -85,6 +85,8 @@ namespace MeepoBotCSharp
             youtubeStreamer.evaluateInput(e.Message.Text, e);
             if (secretSanta != null) {
                 secretSanta.evaluateInput(e.Message.RawText, e);
+                if (secretSanta.getQuit())
+                    secretSanta = null;
             }
             parseInput(e.Message.Text, e);
         }
@@ -199,8 +201,10 @@ namespace MeepoBotCSharp
                 }
                 //The Secret Santa module
                 else if (command == Constants.COMMAND_STARTSECRETSANTA) {
-                    secretSanta = new SecretSanta(server, client);
-                    Console.WriteLine("Secret Santa initialized");
+                    if (secretSanta == null) {
+                        secretSanta = new SecretSanta(server, client);
+                        await e.Channel.SendMessage("The Secret Santa module has been initialized!");
+                    }
                 }
             }
             else if (inputLen > 1)

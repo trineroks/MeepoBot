@@ -23,6 +23,12 @@ namespace MeepoBotCSharp
         private static Random rand = new Random();
         private int month, day, year;
         private int[] edges; //These will define the relationships in Secret Santa
+        private bool quit = false;
+
+        public bool getQuit() 
+        {
+            return quit;
+        }
 
         public SecretSanta(Server server, DiscordClient client) 
         {
@@ -88,7 +94,7 @@ namespace MeepoBotCSharp
                 
                 //await relationships[i].SendMessage(provideSantaCard(relationships[i], relationships[j]));
             }
-            msg += "\n\nRandOrd Output: " + randOrd;
+            msg += "\nRandOrd Output: " + randOrd;
             await textChannel.SendMessage(msg);
         }
 
@@ -99,7 +105,7 @@ namespace MeepoBotCSharp
                                         //this is added to 1 because we must include the first byte to hold the container size.
             arrlen += 12; //4 bytes for each 32bit int in the date section
 
-            arrlen += len * 4; //this will the be randomized seed that gets saved - this is to obfuscate who has who while maintaining the randomization.
+            arrlen += len * 4; //this will the be randomized order that gets saved - this is to obfuscate who has who while maintaining the randomization.
 
             BinSerializer serializer = new BinSerializer(arrlen);
             serializer.writeByte((byte)len);
@@ -130,13 +136,6 @@ namespace MeepoBotCSharp
             string filepath = Path.Combine(path, file);
 
             File.WriteAllBytes(filepath, serializer.data);
-
-            string msg = "File saved, inputting the following: ";
-            foreach (User participant in participants) {
-                msg += participant.Name + ", ";
-            }
-            msg += "End Date: " + month + "/" + day + "/" + year;
-            Console.WriteLine(msg);
         }
 
         public bool loadParticipantsAndRelationship(string fileName) 
@@ -171,13 +170,6 @@ namespace MeepoBotCSharp
             {
                 edges[i] = reader.readInt();
             }
-
-            string msg = "File loaded, outputting the following: " + participantCount + " participants named: ";
-            foreach (User participant in participants) {
-                msg += participant.Name + ", ";
-            }
-            msg += "End Date: " + month + "/" + day + "/" + year;
-            Console.WriteLine(msg);
             return true;
         }
 
@@ -203,8 +195,15 @@ namespace MeepoBotCSharp
                 {
                     if (!isAlphaNumeric(toParse[1]))
                         await e.Channel.SendMessage("Incorrect usage. Filename MUST be alphanumeric with spaces allowed.");
-                    else
+                    else {
                         startSanta(toParse[1]);
+                        string msg = "File saved, inputting the following: " + participants.Count + " participants named:\n\n";
+                        foreach (User participant in participants) {
+                            msg += participant.Name + "\n";
+                        }
+                        msg += "\nEnd Date: " + month + "/" + day + "/" + year;
+                        await e.Channel.SendMessage(msg);
+                    }
                 }
             }
             else if (command == Constants.SecretSanta.COMMAND_WIPEPARTICIPANTS) 
@@ -251,6 +250,14 @@ namespace MeepoBotCSharp
                         if (!loadParticipantsAndRelationship(toParse[1])) {
                             await e.Channel.SendMessage("No such file exists. Please check to see if the file is saved in C:\\Users\\your_name\\Documents\\MeepoBotSecretSanta or that you did not make any typos.");
                         }
+                        else {
+                            string msg = "File loaded, outputting the following: " + participants.Count + " participants named:\n\n";
+                            foreach (User participant in participants) {
+                                msg += participant.Name + "\n";
+                            }
+                            msg += "\nEnd Date: " + month + "/" + day + "/" + year;
+                            await e.Channel.SendMessage(msg);
+                        }
                     }
                 }
             }
@@ -275,6 +282,11 @@ namespace MeepoBotCSharp
             else if (command == Constants.SecretSanta.COMMAND_SENDSANTACARDS) 
             {
                 sendSantaCards();
+            }
+            else if (command == Constants.SecretSanta.COMMAND_QUIT) 
+            {
+                quit = true;
+                await e.Channel.SendMessage("Closing out of Secret Santa module!");
             }
         }
 

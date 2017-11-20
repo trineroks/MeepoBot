@@ -143,6 +143,7 @@ namespace MeepoBotCSharp
             public const string COMMAND_SAVETEST = COMMAND_PREFIX + "ssave";
             public const string COMMAND_LOADTEST = COMMAND_PREFIX + "sload";
             public const string COMMAND_SENDSANTACARDS = COMMAND_PREFIX + "ssend";
+            public const string COMMAND_QUIT = COMMAND_PREFIX + "squit";
         }
     }
 
