@@ -36,7 +36,8 @@ namespace MeepoBotCSharp
         private void shuffle() 
         {
             int i = participants.Count;
-            edges = new int[i];
+            if (edges == null || edges.Length != i)
+                edges = new int[i];
             for (int p = 0; p < i; p++) 
             {
                 edges[p] = p;
@@ -65,19 +66,19 @@ namespace MeepoBotCSharp
                 participants.Add(user);
         }
 
-        public void startSanta() 
+        public void startSanta(string file) 
         {
             shuffle();
-            saveParticipantsAndRelationship();
+            saveParticipantsAndRelationship(file);
         }
 
         public async void sendSantaCards() 
         {
-            loadParticipantsAndRelationship();
-            string msg = "";
-            await textChannel.SendMessage("Relationships set:");
+            string msg = "Relationships set: \n\n";
+            string randOrd = "";
             for (int i = 0; i < edges.Length; i++) {
                 int j = edges[i];
+                randOrd += j;
                 int k;
                 if (i + 1 >= edges.Length)
                     k = edges[0];
@@ -87,10 +88,11 @@ namespace MeepoBotCSharp
                 
                 //await relationships[i].SendMessage(provideSantaCard(relationships[i], relationships[j]));
             }
+            msg += "\n\nRandOrd Output: " + randOrd;
             await textChannel.SendMessage(msg);
         }
 
-        public void saveParticipantsAndRelationship() 
+        public void saveParticipantsAndRelationship(string file) 
         {
             int len = participants.Count;
             int arrlen = 1 + (len * 8); //each ulong takes up 8 bytes. Confidence that this will not exceed a 2GB size array (might change later)
@@ -114,7 +116,20 @@ namespace MeepoBotCSharp
                 serializer.writeInt(edges[i]);
             }
 
-            File.WriteAllBytes("SecretSanta.roks", serializer.data);
+            file += ".roks";
+
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MeepoBotSecretSanta");
+
+            Console.WriteLine(path);
+
+            if (!Directory.Exists(path)) 
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            string filepath = Path.Combine(path, file);
+
+            File.WriteAllBytes(filepath, serializer.data);
 
             string msg = "File saved, inputting the following: ";
             foreach (User participant in participants) {
@@ -124,14 +139,21 @@ namespace MeepoBotCSharp
             Console.WriteLine(msg);
         }
 
-        public void loadParticipantsAndRelationship() 
+        public bool loadParticipantsAndRelationship(string fileName) 
         {
+            fileName += ".roks";
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MeepoBotSecretSanta", fileName);
+
+            if (!File.Exists(path)) {
+                return false;
+            }
+
             participants.Clear();
-            byte[] file = File.ReadAllBytes("SecretSanta.roks");
+            byte[] file = File.ReadAllBytes(path);
             BinReader reader = new BinReader(file);
             if (file.Length < 1) {
                 Console.WriteLine("The file is empty.");
-                return;
+                return false;
             }
             int participantCount = reader.readByte();
             for (int i = 0; i < participantCount; i++) 
@@ -156,6 +178,13 @@ namespace MeepoBotCSharp
             }
             msg += "End Date: " + month + "/" + day + "/" + year;
             Console.WriteLine(msg);
+            return true;
+        }
+
+        private bool isAlphaNumeric(string input) 
+        {
+            string pattern = @"^[a-zA-Z0-9\s,]*$";
+            return Regex.IsMatch(input, pattern);
         }
 
         public async void evaluateInput(string input, MessageEventArgs e) 
@@ -168,7 +197,15 @@ namespace MeepoBotCSharp
                 return;
             else if (command == Constants.SecretSanta.COMMAND_STARTSANTA)
             {
-                startSanta();
+                if (inputLen < 2 || inputLen > 2)
+                    await e.Channel.SendMessage("Incorrect usage. Use " + Constants.SecretSanta.COMMAND_STARTSANTA + " filename.");
+                else 
+                {
+                    if (!isAlphaNumeric(toParse[1]))
+                        await e.Channel.SendMessage("Incorrect usage. Filename MUST be alphanumeric with spaces allowed.");
+                    else
+                        startSanta(toParse[1]);
+                }
             }
             else if (command == Constants.SecretSanta.COMMAND_WIPEPARTICIPANTS) 
             {
@@ -202,13 +239,20 @@ namespace MeepoBotCSharp
                     Console.WriteLine(participant.Name);
                 }
             }
-            else if (command == Constants.SecretSanta.COMMAND_SAVETEST) 
-            {
-                saveParticipantsAndRelationship();
-            }
             else if (command == Constants.SecretSanta.COMMAND_LOADTEST) 
             {
-                loadParticipantsAndRelationship();
+                if (inputLen < 2 || inputLen > 2)
+                    await e.Channel.SendMessage("Incorrect usage. Use " + Constants.SecretSanta.COMMAND_LOADTEST + " filename.");
+                else {
+                    if (!isAlphaNumeric(toParse[1]))
+                        await e.Channel.SendMessage("Incorrect usage. Filename MUST be alphanumeric with spaces allowed.");
+                    else 
+                    {
+                        if (!loadParticipantsAndRelationship(toParse[1])) {
+                            await e.Channel.SendMessage("No such file exists. Please check to see if the file is saved in C:\\Users\\your_name\\Documents\\MeepoBotSecretSanta or that you did not make any typos.");
+                        }
+                    }
+                }
             }
             else if (command == Constants.SecretSanta.COMMAND_ENDDATE) 
             {

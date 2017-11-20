@@ -33,7 +33,7 @@ namespace MeepoBotCSharp
             client.MessageReceived += bot_MessageReceived;
             youtubeStreamer = new YoutubeStreamer(client);
             client.ExecuteAndWait(async () => {
-                await client.Connect("letsgoplaydrums@hotmail.com", "1GoodDiscord");
+                await client.Connect("","");
                 while (true) {
                     youtubeStreamer.PlayerLoop();
                     try {
