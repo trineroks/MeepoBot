@@ -80,7 +80,7 @@ namespace MeepoBotCSharp
 
         public async void sendSantaCards() 
         {
-            string msg = "Relationships set: \n\n";
+            string msg = "Relationships set and cards sent!";
             string randOrd = "";
             for (int i = 0; i < edges.Length; i++) {
                 int j = edges[i];
@@ -90,12 +90,10 @@ namespace MeepoBotCSharp
                     k = edges[0];
                 else
                     k = edges[i + 1];
-                msg += participants[j] + " --> " + participants[k] + "\n";
-                
-                //await relationships[i].SendMessage(provideSantaCard(relationships[i], relationships[j]));
+                await participants[j].SendMessage(provideSantaCard(participants[j], participants[k]));
             }
             msg += "\nRandOrd Output: " + randOrd;
-            await textChannel.SendMessage(msg);
+            Console.WriteLine(msg);
         }
 
         public void saveParticipantsAndRelationship(string file) 
@@ -292,9 +290,12 @@ namespace MeepoBotCSharp
 
         private string provideSantaCard(User recipient, User giftRecipient) 
         {
-            string msg = "v2 Secret Santa Module. Disclaimer: This is not the official message!! Your name is " + recipient.Name + 
-                " and you are paired with " + giftRecipient.Name + ". The deadline is " + month + "/" + day + "/" + year +
-                        ". Disclaimer: This is not the official message!!";
+            string card = "```";
+            string msg = card + "Welcome to the Secret Santa exchange of 2017, " + recipient.Name + "! You have been randomly paired up with...\n\n" +
+                          giftRecipient.Name + "\n\n" +
+                          "Be sure to check out your recipient's profile on the corresponding Google Docs page! The deadline for shipping out gifts will be...\n\n" +
+                          month + "/" + day + "/" + year + "\n\n" +
+                          "Good luck!" + card;
             return msg;
         }
 
